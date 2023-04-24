@@ -1,0 +1,83 @@
+# Phoenix Playground
+
+```elixir
+Mix.install([
+  {:phoenix, "~> 1.7"},
+  {:ecto, "~> 3.10"},
+  {:kino, "~> 0.9.2"},
+  {:plug_cowboy, "~> 2.5"},
+  {:jason, "~> 1.0"},
+  {:phoenix_html, "~> 3.3"},
+  {:phoenix_live_view, "~> 0.18.18"}
+])
+
+Application.put_env(:phoenix, :json_library, Jason)
+```
+
+## Setup port
+
+```elixir
+port_input = Kino.Input.number("Port", default: 4000)
+```
+
+## Setup Phoenix
+
+```elixir
+if Process.whereis(PhoenixPlayground) do
+  Supervisor.stop(PhoenixPlayground)
+end
+
+Application.put_env(:phoenix_playground, PhoenixPlaygroundWeb.Endpoint,
+  http: [ip: {127, 0, 0, 1}, port: Kino.Input.read(port_input)],
+  server: true,
+  secret_key_base: String.duplicate("a", 64)
+)
+
+defmodule PhoenixPlaygroundWeb.SampleHTML do
+  use Phoenix.Component
+
+  attr(:messenger, :string)
+
+  def greet(assigns) do
+    ~H"""
+    <h2>Hello World, from <%= @messenger %>!</h2>
+    """
+  end
+end
+
+defmodule PhoenixPlaygroundWeb.SampleController do
+  use Phoenix.Controller
+
+  def index(conn, _) do
+    render(conn, :index, meesanger: "Tomek")
+  end
+end
+
+defmodule PhoenixPlaygroundWeb.Router do
+  use Phoenix.Router
+
+  pipeline :browser do
+    plug(:accepts, ["html"])
+  end
+
+  scope "/", PhoenixPlaygroundWeb do
+    pipe_through(:browser)
+
+    get("/", SampleController, :index)
+
+    # Prevent a horrible error because ErrorView is missing
+    get("/favicon.ico", SampleController, :index)
+  end
+end
+
+defmodule PhoenixPlaygroundWeb.Endpoint do
+  use Phoenix.Endpoint, otp_app: :phoenix_playground
+  plug(PhoenixPlaygroundWeb.Router)
+end
+
+{:ok, _} =
+  Supervisor.start_link([PhoenixPlaygroundWeb.Endpoint],
+    strategy: :one_for_one,
+    name: PhoenixPlayground
+  )
+```
