@@ -10,40 +10,77 @@ Mix.install([
   {:phoenix_html, "~> 3.3"},
   {:phoenix_live_view, "~> 0.18.18"}
 ])
-
-Application.put_env(:phoenix, :json_library, Jason)
 ```
 
-## Setup port
+## Port setup
+
+I often have other stuff running on port 4000, so I made it configurable. I propose to set it once and collapse this section.
 
 ```elixir
 port_input = Kino.Input.number("Port", default: 4000)
 ```
 
-## Setup Phoenix
+## Configuration
+
+We are setting bare minimum config using the port defined in previous section. You can also collapse this section.
 
 ```elixir
-if Process.whereis(PhoenixPlayground) do
-  Supervisor.stop(PhoenixPlayground)
-end
+Application.put_env(:phoenix, :json_library, Jason)
 
 Application.put_env(:phoenix_playground, PhoenixPlaygroundWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: Kino.Input.read(port_input)],
   server: true,
   secret_key_base: String.duplicate("a", 64)
 )
+```
 
-defmodule PhoenixPlaygroundWeb.LayoutView do
-  use Phoenix.Component
+## Helpers
 
-  def app(assigns) do
-    ~H"""
-    <%= @inner_content %>
-    """
+I'd like to make restarting the full Phoenix app easy, so I define a helper to do that.
+Unfortunately, Phoenix sometimes takes 5s to shut down. Let me know if you have a solution to 
+that issue!
+
+I am @snajper47 on Twitter.
+
+I propose to collapse this section as well.
+
+```elixir
+supervisor_name = PhoenixPlayground
+
+restart_phoenix = fn ->
+  if Process.whereis(supervisor_name) do
+    Supervisor.stop(supervisor_name)
   end
-end
 
+  {:ok, _} =
+    Supervisor.start_link([PhoenixPlaygroundWeb.Endpoint],
+      strategy: :one_for_one,
+      name: supervisor_name
+    )
+end
+```
+
+## Actual Phoenix code!
+
+A fully functional Phoenix application using HTML templates consists of just 6 modules.
+
+```mermaid
+flowchart LR
+    Endpoint --> Router
+    Router --> Controller
+    Controller --> Layout
+    Layout --> Template
+```
+
+Feel free to experiment! You can modify each of those module as you like and then click "evaluate". The url to access the rendered page should display at the bottom.
+
+```elixir
 defmodule PhoenixPlaygroundWeb.SampleHTML do
+  # components are function that render html
+  # they take a map of assigns e.g. %{name: "Tomek"}
+  # and return a heex template (sigil ~H)
+  # you can list assigns with their types using `attr` macro
+  # and use them in the heex template with <%= @name %> syntax
   use Phoenix.Component
 
   attr(:name, :string)
@@ -55,11 +92,26 @@ defmodule PhoenixPlaygroundWeb.SampleHTML do
   end
 end
 
+defmodule PhoenixPlaygroundWeb.LayoutView do
+  # A layout is a special component that receives an assign
+  # called inner_content
+  use Phoenix.Component
+
+  def app(assigns) do
+    ~H"""
+    <%= @inner_content %>
+    """
+  end
+end
+
 defmodule PhoenixPlaygroundWeb.SampleController do
   use Phoenix.Controller, formats: [:html]
 
-  def index(conn, _) do
-    render(conn, :index, name: "Tomek")
+  def index(conn, _params) do
+    # `render` function inferes layout and template name from controller name and format
+    # the last argument are assigns
+    name = "Tomek"
+    render(conn, :index, name: name)
   end
 end
 
@@ -85,9 +137,5 @@ defmodule PhoenixPlaygroundWeb.Endpoint do
   plug(PhoenixPlaygroundWeb.Router)
 end
 
-{:ok, _} =
-  Supervisor.start_link([PhoenixPlaygroundWeb.Endpoint],
-    strategy: :one_for_one,
-    name: PhoenixPlayground
-  )
+restart_phoenix.()
 ```
