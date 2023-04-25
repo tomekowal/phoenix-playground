@@ -33,23 +33,33 @@ Application.put_env(:phoenix_playground, PhoenixPlaygroundWeb.Endpoint,
   secret_key_base: String.duplicate("a", 64)
 )
 
+defmodule PhoenixPlaygroundWeb.LayoutView do
+  use Phoenix.Component
+
+  def app(assigns) do
+    ~H"""
+    <%= @inner_content %>
+    """
+  end
+end
+
 defmodule PhoenixPlaygroundWeb.SampleHTML do
   use Phoenix.Component
 
-  attr(:messenger, :string)
+  attr(:name, :string)
 
-  def greet(assigns) do
+  def index(assigns) do
     ~H"""
-    <h2>Hello World, from <%= @messenger %>!</h2>
+    <h2>Hello, <%= @name %>!</h2>
     """
   end
 end
 
 defmodule PhoenixPlaygroundWeb.SampleController do
-  use Phoenix.Controller
+  use Phoenix.Controller, formats: [:html]
 
   def index(conn, _) do
-    render(conn, :index, meesanger: "Tomek")
+    render(conn, :index, name: "Tomek")
   end
 end
 
