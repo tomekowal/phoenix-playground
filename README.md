@@ -3,12 +3,15 @@
 Get the taste of Phoenix web framework in just 5m
 using Livebook - the interactive code notebook.
 
+![Screenshot of Livebook next to Phoenix app](assets/screenshot.png)
+
 ### How to use?
 
 1. [Install livebook using your preferred method](https://github.com/livebook-dev/livebook/blob/main/README.md#installation)
 2. Click "Open"
 3. Select tab "From URL"
 4. Paste the link to interactive notebook in this repo 
+5. Click "Import"
 
 ```
 https://github.com/tomekowal/phoenix-playground/blob/main/phoenix-playground.livemd 
