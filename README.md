@@ -14,7 +14,7 @@ using Livebook - the interactive code notebook.
 5. Click "Import"
 
 ```
-https://github.com/tomekowal/phoenix-playground/blob/main/phoenix-playground.livemd 
+https://raw.githubusercontent.com/tomekowal/phoenix-playground/main/phoenix-playground.livemd
 ```
 
 Modify and evaluate the code to understand the basics. Enjoy! :)
